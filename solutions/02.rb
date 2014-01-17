@@ -1,7 +1,17 @@
-class TodoList
-  include Enumerable
+class Task < Struct.new (:status, :description, :priority, :tags)
+  # attr_reader :status, :description, :priority, :tags
 
-  attr_reader :tasks
+  def initialize(status, description, priority, tags = nil)
+    @status = status.strip.downcase.to_sym
+    @description = description.strip
+    @priority = priority.strip.downcase.to_sym
+    @tags = tags.split(", ").map(&:strip) unless tags.nil?
+  end
+end
+
+
+class TodoList < Struct.new (:task)
+  include Enumerable
 
   def self.parse(text)
     tasks = text.each_line.map do |line|
@@ -20,90 +30,107 @@ class TodoList
   end
 
   def filter(criteria)
-    TodoList.new @tasks.select { |task| criteria.met_by? task }
+    TodoList.new tasks.select { |task| criteria.met_by? task }
   end
 
   def adjoin(other)
     TodoList.new(tasks + other.tasks)
   end
 
-  alias | adjoin
-
   def tasks_todo
-    (filter Criteria.status(:todo)).tasks.size
+    count { |task| task.status == :todo }
   end
 
   def tasks_in_progress
-    (filter Criteria.status(:current)).tasks.size
+    count { |task| task.status == :current }
   end
 
   def tasks_completed
-    (filter Criteria.status(:done)).tasks.size
+    count { |task| task.status == :done }
   end
 
   def completed?
-    tasks.size == tasks_completed
-  end
-end
-
-class Task
-  attr_reader :status, :description, :priority, :tags
-
-  def initialize(status, description, priority, tags = nil)
-    @status = status.downcase.to_sym
-    @description = description
-    @priority = priority.downcase.to_sym
-    @tags = tags.split(", ") unless tags.nil?
-  end
-
-  def status
-    @status
-  end
-
-  def priority
-    @priority
-  end
-
-  def description
-    @description
-  end
-
-  def tags
-    @tags
+    tasks.length == tasks_completed 
   end
 end
 
 class Criteria
-  def self.status(status)
-    AttributeMatch.new :status, status
-  end
+  attr_accessor :block
 
-  def self.priority(priority)
-    AttributeMatch.new :priority, priority
-  end
-
-  def self.tags(tags)
-    TagsMatch.new tags
-  end
-end
-
-class AttributeMatch
-  def initialize(attribute, value)
-    @attribute = attribute
-    @value = value
+  def initialize(&block)
+    @block = block
   end
 
   def met_by?(task)
-    task.send(@attribute) == @value
+    block.call task
+  end
+
+  def &(other)
+    Criteria.new { |task| met_by? task and other.met_by? task }
+  end
+
+  def |(other)
+    Criteria.new { |task| met_by? task or other.met_by? task }
+  end
+
+  def !(other)
+    Criteria.new { |task| not met_by? task }
+  end
+
+  class << self
+    def status(status)
+      Criteria.new { |task| task.status == status }
+    end
+
+    def priority(priority)
+      Criteria.new { |task| task.priority == priority }
+    end
+
+    def tags(tags)
+      Criteria.new { |task| tags.all? { |tag| task.tags.include? tag } }
+    end
   end
 end
 
-class TagsMatches
-  def initialize(tags)
-    @tags = tags
-  end
 
-  def met_by?(task)
-    @tags.all? { |tag| task.tags.include? tag }
-  end
-end
+
+
+
+
+
+
+
+# class Criteria
+#   def self.status(status)
+#     AttributeMatch.new :status, status
+#   end
+
+#   def self.priority(priority)
+#     AttributeMatch.new :priority, priority
+#   end
+
+#   def self.tags(tags)
+#     TagsMatch.new tags
+#   end
+# end
+
+# class AttributeMatch
+#   def initialize(attribute, value)
+#     @attribute = attribute
+#     @value = value
+#   end
+
+#   def met_by?(task)
+#     task.send(@attribute) == @value
+#   end
+# end
+
+# class TagsMatches
+#   def initialize(tags)
+#     @tags = tags
+#   end
+
+#   def met_by?(task)
+#     @tags.all? { |tag| task.tags.include? tag }
+#   end
+# end
