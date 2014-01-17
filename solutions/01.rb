@@ -15,34 +15,35 @@ class Integer
   end
 
   def harmonic
-    sum = 0.0r
-    (1..abs).each { |number| sum += Rational(1, number) }
-    sum
+    (1..self).map(&:reciprocal).reduce(:+) if positive?
   end
 
   def digits
-    digits = []
-    abs.to_s.split('').each { |digit| digits << digit.to_i }
-    digits
+    abs.to_s.chars.map(&:to_i)
   end
 end
 
 class Array
   def frequencies
-    frequencies = Hash.new(0)
-    each { |key| frequencies[key] += 1 }
-    frequencies
+    each_with_object Hash.new(0) do |value, result|
+      result[value] += 1
+    end
   end
 
   def average
-    reduce { |accumulator, element| accumulator + element } / size.to_f
+    reduce(:+) / length.to_f unless empty?
   end
 
   def drop_every(n)
-    each_slice(n).map { |list| list[0, n-1] }.flatten
+    each_slice(n).map { |slice| slice[0, n-1] }.flatten
   end
 
   def combine_with(other)
-    zip(other).flatten.compact
+    longer, shorter = self.length > other.length ? [self, other] : [other, self]
+
+    combined = take(shorter.length).zip(other.take(shorter.length)).flatten
+    rest = longer.drop(shorter.length)
+
+    combined + rest
   end
 end
