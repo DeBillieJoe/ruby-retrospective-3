@@ -15,7 +15,11 @@ class Integer
   end
 
   def harmonic
-    (1..self).map(&:reciprocal).reduce(:+) if positive?
+    (1..self).map(&:reciprocal).reduce(:+) if self > 0
+  end
+
+  def reciprocal
+    1 / to_r
   end
 
   def digits
@@ -41,7 +45,7 @@ class Array
   def combine_with(other)
     longer, shorter = self.length > other.length ? [self, other] : [other, self]
 
-    combined = take(shorter.length).zip(other.take(shorter.length)).flatten
+    combined = take(shorter.length).zip(other.take(shorter.length)).flatten 1
     rest = longer.drop(shorter.length)
 
     combined + rest
