@@ -77,6 +77,7 @@ module Graphics
       @top_left, @bottom_left, @top_right, @bottom_right = *[left, right, 
         Point.new(left.x, right.y), 
         Point.new(right.x, left.y)].sort
+
       @corners = [top_left, bottom_left, bottom_right, top_right]
       @points = []
     end
@@ -100,8 +101,11 @@ module Graphics
     attr_accessor :pixels
 
     def initialize(width, height)
-      @pixels = Hash.new false
-      
+      @pixels = {}
+      0.upto(height-1) do |y|
+        0.upto(width-1) do |x|
+          pixels[[x, y]] = false
+
       @width = width
       @height = height
     end
@@ -134,16 +138,15 @@ module Graphics
   end
 
   module Renderers
-    class Ascii
-      @symbols = {true => "@", false => "-", :new_line => "\n",
-                  :start => "", :end => "", :symbol_length => 1}
-
-      def Ascii.symbols()
-        @symbols
-      end
+    module Ascii
+      SYMBOLS = {true => "@".freeze, false => "-".freeze, :new_line => "\n".freeze,
+                  :start => "", :end => ""}
     end
 
-    class Html
+    module Html
+      SYMBOLS = {true => "<b></b>".freeze, false => "<i></i>".freeze, :new_line => "<br>".freeze,
+                  :start => @start, :end => @end}
+
       @start = "<!DOCTYPE html>
 <html>
 <head>
