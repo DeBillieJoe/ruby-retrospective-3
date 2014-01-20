@@ -26,14 +26,14 @@ module Graphics
       Point.new x / divisor, y / divisor
     end
 
-    def <=>)other)
+    def <=>(other)
       return -1 if x < other.x or (x == other.x and y < other.y)
       return 0 if self == other
       1
     end
 
     def draw()
-      @points = [[@x, @y]]
+      points
     end
   end
 
@@ -51,15 +51,20 @@ module Graphics
 
     alias :== :eql?
 
-    def draw()
-      step_count = [(to.x - from.x).abs], (to.y-from.y).abs].max
-      delta = (to - from) / step_count.to_r
+    def step
+      [(to.x - from.x).abs, (to.y-from.y).abs].max
+    end
+
+    def draw
+      delta = (to - from) / step.to_r
       current_point = from
 
-      step_count.succ.times do 
-        @pixels << [current_point.x.round, current_point.y.round]
+      step.succ.times do 
+        @points << [current_point.x.round, current_point.y.round]
         current_point = current_point + delta 
       end
+
+      points
     end
   end
 
@@ -71,17 +76,23 @@ module Graphics
       @left, @right = *[left, right].sort
       @top_left, @bottom_left, @top_right, @bottom_right = *[left, right, 
         Point.new(left.x, right.y), 
-        Point.new(right.x, left.y)]
+        Point.new(right.x, left.y)].sort
       @corners = [top_left, bottom_left, bottom_right, top_right]
+      @points = []
     end
 
-    def draw()
-      @points = []
-      sides = [Line.new(bottom_left, top_left), Line.new(top_left, top_right),
-               Line.new(top_right, bottom_right), Line.new(bottom_left, bottom_right)]
+    def draw
       sides.each { |side| points << side.draw }
+      points.flatten 1
+    end
 
-      points.flatten(1).uniq
+    def sides
+      [
+        Line.new(top_left,    top_right   ),
+        Line.new(top_right,   bottom_right),
+        Line.new(bottom_left, bottom_right),
+        Line.new(top_left,    bottom_left )
+      ]
     end
   end
 
@@ -89,22 +100,18 @@ module Graphics
     attr_accessor :pixels
 
     def initialize(width, height)
-      @pixels = {}
-      0.upto(height-1) do |y|
-        0.upto(width-1) do |x|
-          pixels[[x, y]]=false
-        end
-      end
+      @pixels = Hash.new false
+      
       @width = width
       @height = height
     end
 
     def set_pixel(x, y)
-      @pixels[[x, y]]=true
+      @pixels[[y, x]] = true
     end
 
     def pixel_at?(x, y)
-      @pixels[[x, y]]
+      @pixels[[y, x]]
     end
 
     def draw(figure)
