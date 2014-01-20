@@ -3,9 +3,9 @@ module Graphics
     attr_accessor :x, :y, :points
 
     def initialize(x, y)
-      @points = []
       @x = x
       @y = y
+      @points = [[@x, @y]]
     end
 
     def eql?(other)
@@ -14,12 +14,22 @@ module Graphics
 
     alias :== :eql?
 
-    def lefter?(other)
-      @x <= other.x
+    def +(other)
+      Point.new x + other.x, y + other.y
     end
 
-    def upper?(other)
-      @y <= other.y
+    def -(other)
+      Point.new x - other.x, y - other.y
+    end
+
+    def /(divisor)
+      Point.new x / divisor, y / divisor
+    end
+
+    def <=>)other)
+      return -1 if x < other.x or (x == other.x and y < other.y)
+      return 0 if self == other
+      1
     end
 
     def draw()
@@ -31,12 +41,8 @@ module Graphics
     attr_accessor :from, :to, :points
 
     def initialize(from, to)
+      @from, @to = *[from, to].sort
       @points = []
-      if from.lefter? to
-        @from, @to = from, to
-      else
-        @from, @to= to, from
-      end
     end
 
     def eql?(other)
@@ -45,88 +51,28 @@ module Graphics
 
     alias :== :eql?
 
-    def from()
-      if @from.x == @to.x
-        @from.y <= @to.y ? @from : @to
-      else
-        @from
-      end
-    end
-
-    def to()
-      if @from.x == @to.x
-        @from.y <= @to.y ? @to : @from
-      else
-        @to
-      end
-    end
-
-    def vertical?()
-      @from.x == @to.x
-    end
-
-    def horizontal?()
-      @from.y == @to.y
-    end
-
     def draw()
-      vertical_draw if vertical?
-      horizontal_draw if horizontal?
-      draw_line() if points.empty?
-      points
+      step_count = [(to.x - from.x).abs], (to.y-from.y).abs].max
+      delta = (to - from) / step_count.to_r
+      current_point = from
+
+      step_count.succ.times do 
+        @pixels << [current_point.x.round, current_point.y.round]
+        current_point = current_point + delta 
+      end
     end
-
-    def vertical_draw()
-      from.y.upto(to.y).each { |y| points << [from.x, y] } if points.empty?
-    end
-
-    def horizontal_draw()
-      from.x.upto(to.x).each { |x| points << [x, from.y] } if points.empty?
-    end
-
-    def draw_line()
-
-    end
-
   end
+
   class Rectangle
     attr_accessor :points, :left, :right, :top_left, :top_right,
                   :bottom_left, :bottom_right
 
     def initialize(left, right)
-      if left.lefter? right or left.upper? right
-        @left, @right  = left, right
-      else
-        @left, @right  = right, left
-      end
-      left_corners()
-      right_corners()
-    end
-
-    def left_corners()
-      other_left_point = Point.new left.x, right.y
-      if left.upper? other_left_point
-        @top_left, @bottom_left = left, other_left_point
-      else
-        @top_left, @bottom_left = other_left_point, left
-      end
-    end
-
-    def right_corners()
-      other_right_point = Point.new right.x, left.y
-      if right.upper? other_right_point
-        @top_right, @bottom_right = right, other_right_point
-      else
-        @top_right, @bottom_right = other_right_point, right
-      end
-    end
-
-    def left?()
-      @left
-    end
-
-    def right?()
-      @right
+      @left, @right = *[left, right].sort
+      @top_left, @bottom_left, @top_right, @bottom_right = *[left, right, 
+        Point.new(left.x, right.y), 
+        Point.new(right.x, left.y)]
+      @corners = [top_left, bottom_left, bottom_right, top_right]
     end
 
     def draw()
@@ -136,22 +82,6 @@ module Graphics
       sides.each { |side| points << side.draw }
 
       points.flatten(1).uniq
-    end
-
-    def top_left()
-      @top_left
-    end
-
-    def bottom_left()
-      @bottom_left
-    end
-
-    def top_right
-      @top_right
-    end
-
-    def bottom_right
-      @bottom_right
     end
   end
 
