@@ -1,11 +1,16 @@
 module Graphics
   class Point
-    attr_accessor :x, :y, :points
+    attr_reader :x, :y
+    attr_accessor :points
 
     def initialize(x, y)
       @x = x
       @y = y
       @points = [[@x, @y]]
+    end
+
+    def hash
+      [x, y].hash
     end
 
     def eql?(other)
@@ -38,7 +43,8 @@ module Graphics
   end
 
   class Line
-    attr_accessor :from, :to, :points
+    attr_reader :from, :to
+    attr_accessor :points
 
     def initialize(from, to)
       @from, @to = *[from, to].sort
@@ -59,23 +65,39 @@ module Graphics
       delta = (to - from) / step.to_r
       current_point = from
 
-      step.succ.times do 
+      step.succ.times do
         @points << [current_point.x.round, current_point.y.round]
-        current_point = current_point + delta 
+        current_point = current_point + delta
       end
 
       points
     end
+
+    def hash
+      [from, to].hash
+    end
   end
 
   class Rectangle
-    attr_accessor :points, :left, :right, :top_left, :top_right,
+    attr_reader :left, :right, :top_left, :top_right,
                   :bottom_left, :bottom_right
+    attr_accessor :points
+
+    def hash
+      [top_left, bottom_left, bottom_right, top_right].hash
+    end
+
+    def eql?(other)
+      @top_left == other.top_left and @top_right == other.top_right and
+      @bottom_right == other.bottom_right and @bottom_left == other.bottom_left
+    end
+
+    alias :== :eql?
 
     def initialize(left, right)
       @left, @right = *[left, right].sort
-      @top_left, @bottom_left, @top_right, @bottom_right = *[left, right, 
-        Point.new(left.x, right.y), 
+      @top_left, @bottom_left, @top_right, @bottom_right = *[left, right,
+        Point.new(left.x, right.y),
         Point.new(right.x, left.y)].sort
 
       @corners = [top_left, bottom_left, bottom_right, top_right]
@@ -114,30 +136,25 @@ module Graphics
     end
 
     def set_pixel(x, y)
-      @pixels[[y, x]] = true
+      @pixels[[x, y]] = true
     end
 
     def pixel_at?(x, y)
-      @pixels[[y, x]]
+      @pixels[[x, y]]
     end
 
     def draw(figure)
       figure.draw.each { |point| set_pixel(*point) }
     end
 
-    def render(renderer)
-      content = ""
-      length = renderer.symbols[:symbol_length]
-      pixels.values.each { |value| content += renderer.symbols[value] }
-      content.chars.each_slice(30*length).map(&:join).join(renderer.symbols[:new_line])
+    def canvas(width, height)
+      0.upto(height - 1).map { |y| 0.upto(width - 1).map { |x| [x, y] } }
     end
 
     def render_as(renderer)
-      output = renderer::SYMBOLS[:start]
-      output += pixels.map do |line|
-        line.map { |symbol| renderer::SYMBOLS[symbol] }.join
-      end.join(renderer::SYMBOLS[:new_line])
-      output += renderer::SYMBOLS[:end]
+      content = renderer::SYMBOLS[:start]
+      content += canvas(@width, @height).map  { |row| row.map { |point| renderer::SYMBOLS[@pixels[point]] }.join }.join(renderer::SYMBOLS[:new_line])
+      content += renderer::SYMBOLS[:end]
     end
   end
 
