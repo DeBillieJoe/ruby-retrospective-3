@@ -21,16 +21,37 @@ module Asm
     end
   end
 
+  module Jumps
+    def jmp(where)
+      @pointer = @labels[where] or where
+    end
+
+    jumps = {
+      je:  :'==',
+      jne: :'!=',
+      jl:  :'<',
+      jle: :'<=',
+      jg:  :'>',
+      jge: :'>='
+    }
+
+    jumps.each do |jump_name, comparison|
+      define_method jump_name do |where|
+        @last_comparison.public_send(comparison, 0) ? (return jmp where) : @pointer = @pointer.succ
+      end
+    end
 
   class Evaluator
 
     include Instructions
-    
+    include Jumps
+
     def initialize
       @registers = {ax: 0, bx: 0, cx: 0, dx: 0}
       @last_comparison = 0
       @operations = []
       @labels = {}
+      @pointer = 0
     end
   end
 
