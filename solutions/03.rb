@@ -99,12 +99,15 @@ module Graphics
 
   class Canvas
     attr_accessor :pixels
+    attr_reader :width, :height
 
     def initialize(width, height)
       @pixels = {}
       0.upto(height-1) do |y|
         0.upto(width-1) do |x|
           pixels[[x, y]] = false
+        end
+      end
 
       @width = width
       @height = height
@@ -130,10 +133,11 @@ module Graphics
     end
 
     def render_as(renderer)
-      output = renderer.symbols[:start]
-      output += render(renderer)
-      output += renderer.symbols[:end]
-      output
+      output = renderer::SYMBOLS[:start]
+      output += pixels.map do |line|
+        line.map { |symbol| renderer::SYMBOLS[symbol] }.join
+      end.join(renderer::SYMBOLS[:new_line])
+      output += renderer::SYMBOLS[:end]
     end
   end
 
@@ -144,45 +148,41 @@ module Graphics
     end
 
     module Html
-      SYMBOLS = {true => "<b></b>".freeze, false => "<i></i>".freeze, :new_line => "<br>".freeze,
-                  :start => @start, :end => @end}
+      SYMBOLS = {true => "<b></b>".freeze, false => "<i></i>".freeze, :new_line => "<br>".freeze}
 
-      @start = "<!DOCTYPE html>
-<html>
-<head>
-  <title>Rendered Canvas</title>
-  <style type="'text/css'">
-    .canvas {
-      font-size: 1px;
-      line-height: 1px;
-    }
-    .canvas * {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 5px;
-    }
-    .canvas i {
-      background-color: #eee;
-    }
-    .canvas b {
-      background-color: #333;
-    }
-  </style>
-</head>
-<body>
-  <div class="'canvas'">
-    "
+      # HTML_PREFIX = <<-PREDATA
+      #   <!DOCTYPE html>
+      #   <html>
+      #   <head>
+      #     <title>Rendered Canvas</title>
+      #     <style type="text/css">
+      #       .canvas {
+      #         font-size: 1px;
+      #         line-height: 1px;
+      #       }
+      #       .canvas * {
+      #         display: inline-block;
+      #         width: 10px;
+      #         height: 10px;
+      #         border-radius: 5px;
+      #       }
+      #       .canvas i {
+      #         background-color: #eee;
+      #       }
+      #       .canvas b {
+      #         background-color: #333;
+      #       }
+      #     </style>
+      #   </head>
+      #   <body>
+      #     <div class="canvas">
+      #   PREDATA
 
-      @end =  "</div>
-             </body>
-             </html>"
-      @symbols = {true => "<b></b>", false => "<i></i>", :new_line => "<br>",
-                  :start => @start, :end => @end, :symbol_length => 7}
-
-      def Html.symbols()
-        @symbols
-      end
+      # HTML_SUFFIX = <<-POSTDATA
+      #     </div>
+      #   </body>
+      #   </html>
+      #   POSTDATA
     end
   end
 end
