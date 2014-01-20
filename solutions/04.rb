@@ -1,45 +1,36 @@
 module Asm
+  module Instructions
+    def mov(destination_register, source)
+      @registers[destination_register] = get_value source
+    end
+
+    def inc(destination_register, value = 1)
+      @registers[destination_register] += get_value value
+    end
+
+    def dec(destination_register, value = 1)
+      @registers[destination_register] -= get_value value
+    end
+
+    def cmp(register, value)
+      @last_comparison = @registers[register] <=> get_value value
+    end
+
+    def get_value(value)
+      @registers[value] or value
+    end
+  end
+
+
   class Evaluator
 
-    attr_accessor :ax, :bx, :cx, :dx, :registers, :last_cmp, :operations_queue
-
-    operations = {
-      mov: :'=',
-      inc: :'+',
-      dec: :'-',
-      cmp: :'<=>',
-      jg: :'jg',
-      label: :'label'
-    }
-
-    operations.each do |operation_name, operation|
-      define_method operation_name do |*arguments|
-        @operations_queue << [operation, *arguments]
-      end
-    end
-
+    include Instructions
+    
     def initialize
-      @ax, @bx, @cx, @dx = Register.new("ax"),  Register.new("bx"),
-                           Register.new("cx"),  Register.new("dx")
-      @registers = [@ax, @bx, @cx, @dx]
-      @operations_queue = []
-      @labeled_operations = {}
-    end
-
-    def ax=(value)
-      @ax.value = value
-    end
-
-    def bx=(value)
-      @bx.value = value
-    end
-
-    def cx=(value)
-      @cx.value = value
-    end
-
-    def dx=(value)
-      @dx.value = value
+      @registers = {ax: 0, bx: 0, cx: 0, dx: 0}
+      @last_comparison = 0
+      @operations = []
+      @labels = {}
     end
   end
 
@@ -73,14 +64,5 @@ module Asm
     perform_operations(evaluator)
 
     evaluator.registers.map { |register| register.value }
-  end
-
-  class Register
-    attr_accessor :value, :name
-
-    def initialize(name)
-      @value = 0
-      @name = name
-    end
   end
 end
