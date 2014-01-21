@@ -1,7 +1,15 @@
 module Graphics
+  module Figure
+    def hash
+      important_points.hash
+    end
+  end
+
   class Point
     attr_reader :x, :y
     attr_accessor :points
+
+    include Figure
 
     def initialize(x, y)
       @x = x
@@ -9,8 +17,8 @@ module Graphics
       @points = [[@x, @y]]
     end
 
-    def hash
-      [x, y].hash
+    def important_points
+      [x, y]
     end
 
     def eql?(other)
@@ -46,6 +54,8 @@ module Graphics
     attr_reader :from, :to
     attr_accessor :points
 
+    include Figure
+
     def initialize(from, to)
       @from, @to = *[from, to].sort
       @points = []
@@ -77,8 +87,8 @@ module Graphics
       points
     end
 
-    def hash
-      [from, to].hash
+    def important_points
+      [from, to]
     end
   end
 
@@ -87,9 +97,7 @@ module Graphics
                   :bottom_left, :bottom_right
     attr_accessor :points
 
-    def hash
-      [top_left, bottom_left, bottom_right, top_right].hash
-    end
+    include Figure
 
     def eql?(other)
       @top_left == other.top_left and @top_right == other.top_right and
@@ -121,6 +129,10 @@ module Graphics
         Line.new(top_left,    bottom_left )
       ]
     end
+
+    def important_points
+      [top_left, bottom_left, bottom_right, top_right]
+    end
   end
 
   class Canvas
@@ -151,14 +163,21 @@ module Graphics
       figure.draw.each { |point| set_pixel(*point) }
     end
 
-    def canvas(width, height)
-      0.upto(height - 1).map { |y| 0.upto(width - 1).map { |x| [x, y] } }
+    def canvas
+      0.upto(@height - 1).map { |y| 0.upto(@width - 1).map { |x| [x, y] } }
     end
 
     def render_as(renderer)
+      renderer::CONTENT % render_content(renderer)
+    end
 
-      renderer::CONTENT % canvas(@width, @height).map  { |row| row.map { |point| renderer::SYMBOLS[@pixels[point]] }.join }.join(renderer::SYMBOLS[:new_line])
+    def render_content(renderer)
+      renderer = renderer::SYMBOLS
+      canvas.map { |row| row_content(row, renderer) }.join(renderer[:new_line])
+    end
 
+    def row_content(row, renderer)
+      row.map { |point| renderer[@pixels[point]] }.join
     end
   end
 
@@ -170,7 +189,8 @@ module Graphics
     end
 
     module Html
-      SYMBOLS = {true => "<b></b>".freeze, false => "<i></i>".freeze, :new_line => "<br>".freeze}
+      SYMBOLS = {true => "<b></b>".freeze, false => "<i></i>".freeze,
+                 :new_line => "<br>".freeze}
 
       CONTENT =
         "<!doctypehtml>
