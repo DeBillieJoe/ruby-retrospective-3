@@ -62,6 +62,10 @@ module Graphics
     end
 
     def draw
+      step.zero? ? from.draw : bresenham_algorithm
+    end
+
+    def bresenham_algorithm
       delta = (to - from) / step.to_r
       current_point = from
 
