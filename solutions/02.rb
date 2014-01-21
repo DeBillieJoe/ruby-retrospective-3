@@ -80,7 +80,9 @@ class Criteria
     end
 
     def tags(tags)
-      Criteria.new -> (task) { (task.tags & tags).length == tags.length }
+      Criteria.new do |task|
+        (tags - task.tags).empty?
+      end
     end
   end
 end
