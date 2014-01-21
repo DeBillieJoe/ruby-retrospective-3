@@ -183,8 +183,7 @@ module Graphics
 
   module Renderers
     module Ascii
-      SYMBOLS = {true => "@".freeze, false => "-".freeze, :new_line => "\n".freeze,
-                  :start => "", :end => ""}
+      SYMBOLS = {true => "@".freeze, false => "-".freeze, :new_line => "\n".freeze}
       CONTENT = "%s"
     end
 
