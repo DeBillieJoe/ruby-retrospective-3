@@ -26,27 +26,31 @@ module Asm
       @pointer = (@labels[where] or where)
     end
 
-    jumps = {
+    def jump_handler(comparison, where)
+      if @last_comparison.public_send(comparison, 0)
+        return jmp(where)
+      else
+        @pointer = @pointer.succ
+      end
+    end
+
+    JUMPS = {
       je:  :'==',
       jne: :'!=',
       jl:  :'<',
       jle: :'<=',
       jg:  :'>',
       jge: :'>='
-    }
+    }.freeze
 
-    jumps.each do |jump_name, comparison|
+    JUMPS.each do |jump_name, comparison|
       define_method jump_name do |where|
-        if @last_comparison.public_send(comparison, 0)
-          return jmp(where)
-        else
-          @pointer = @pointer.succ
-        end
+        jump_handler comparison, where
       end
     end
   end
 
-  class Evaluator
+  class Executor
     include Instructions
     include Jumps
 
@@ -83,15 +87,15 @@ module Asm
 
     def evaluate
       until @pointer == @operations.size
-        method_name, args = @operations[@pointer].first, @operations[@pointer].last
-        public_send(method_name, *args)
-        @pointer = @pointer.succ if !Jumps.instance_methods.include? method_name
+        method_name = @operations[@pointer].first
+        public_send(method_name, *@operations[@pointer].last)
+        @pointer += 1 if !Jumps.instance_methods.include? method_name
       end
       @registers.values
     end
   end
 
   def self.asm(&block)
-    Evaluator.new(&block).evaluate
+    Executor.new(&block).evaluate
   end
 end
