@@ -13,7 +13,7 @@ end
 
 class List
   include Enumerable
-  
+
   attr_accessor :tasks
 
   def initialize(tasks = [])
@@ -45,7 +45,7 @@ class List
   end
 
   def completed?
-    @tasks.length == tasks_completed 
+    @tasks.length == tasks_completed
   end
 end
 

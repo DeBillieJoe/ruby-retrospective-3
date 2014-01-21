@@ -147,8 +147,7 @@ module Graphics
         end
       end
 
-      @width = width
-      @height = height
+      @width, @height = width, height
     end
 
     def set_pixel(x, y)
