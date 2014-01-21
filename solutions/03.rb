@@ -75,8 +75,11 @@ module Graphics
       step.zero? ? from.draw : bresenham_algorithm
     end
 
+    def delta
+      (to - from) / step.to_r
+    end
+
     def bresenham_algorithm
-      delta = (to - from) / step.to_r
       current_point = from
 
       step.succ.times do
@@ -112,8 +115,7 @@ module Graphics
         Point.new(left.x, right.y),
         Point.new(right.x, left.y)].sort
 
-      @corners = [top_left, bottom_left, bottom_right, top_right]
-      @points = []
+      @corners, @points = [top_left, bottom_left, bottom_right, top_right], []
     end
 
     def draw

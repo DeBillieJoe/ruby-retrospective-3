@@ -1,12 +1,10 @@
 class Task < Struct.new(:status, :description, :priority, :tags)
 
   def self.new_from_raw_data(status, description, priority, tags)
-    Task.new(
-             status.downcase.to_sym,
+    Task.new(status.downcase.to_sym,
              description,
              priority.downcase.to_sym,
-             tags.split(", ").map(&:strip)
-             )
+             tags.split(", ").map(&:strip))
   end
 end
 
@@ -82,7 +80,7 @@ class Criteria
     end
 
     def tags(tags)
-      Criteria.new { |task| tags.all? { |tag| task.tags.include? tag } }
+      Criteria.new -> (task) { (task.tags & tags).length == tags.length }
     end
   end
 end

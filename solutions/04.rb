@@ -37,7 +37,11 @@ module Asm
 
     jumps.each do |jump_name, comparison|
       define_method jump_name do |where|
-        @last_comparison.public_send(comparison, 0) ? (return jmp(where)) : @pointer = @pointer.succ
+        if @last_comparison.public_send(comparison, 0)
+          return jmp(where)
+        else
+          @pointer = @pointer.succ
+        end
       end
     end
   end
@@ -56,7 +60,8 @@ module Asm
       end
 
       def method_missing(method_name, *args)
-        if (Instructions.instance_methods + Jumps.instance_methods).include? method_name
+        all_operations = Instructions.instance_methods + Jumps.instance_methods
+        if all_operations.include? method_name
           @operations << [method_name, args]
         else
           method_name.to_sym
@@ -70,8 +75,7 @@ module Asm
 
     def initialize(&block)
       @registers = {ax: 0, bx: 0, cx: 0, dx: 0}
-      @last_comparison = 0
-      @pointer = 0
+      @last_comparison, @pointer = 0, 0
       storage = Storage.new(&block)
       @operations = storage.operations
       @labels = storage.labels
@@ -79,8 +83,7 @@ module Asm
 
     def evaluate
       until @pointer == @operations.size
-        method_name = @operations[@pointer].first
-        args        = @operations[@pointer].last
+        method_name, args = @operations[@pointer].first, @operations[@pointer].last
         public_send(method_name, *args)
         @pointer = @pointer.succ if !Jumps.instance_methods.include? method_name
       end
