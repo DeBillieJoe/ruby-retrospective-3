@@ -156,9 +156,9 @@ module Graphics
     end
 
     def render_as(renderer)
-      content = renderer::SYMBOLS[:start]
-      content += canvas(@width, @height).map  { |row| row.map { |point| renderer::SYMBOLS[@pixels[point]] }.join }.join(renderer::SYMBOLS[:new_line])
-      content += renderer::SYMBOLS[:end]
+
+      renderer::CONTENT % canvas(@width, @height).map  { |row| row.map { |point| renderer::SYMBOLS[@pixels[point]] }.join }.join(renderer::SYMBOLS[:new_line])
+
     end
   end
 
@@ -166,44 +166,42 @@ module Graphics
     module Ascii
       SYMBOLS = {true => "@".freeze, false => "-".freeze, :new_line => "\n".freeze,
                   :start => "", :end => ""}
+      CONTENT = "%s"
     end
 
     module Html
       SYMBOLS = {true => "<b></b>".freeze, false => "<i></i>".freeze, :new_line => "<br>".freeze}
 
-      # HTML_PREFIX = <<-PREDATA
-      #   <!DOCTYPE html>
-      #   <html>
-      #   <head>
-      #     <title>Rendered Canvas</title>
-      #     <style type="text/css">
-      #       .canvas {
-      #         font-size: 1px;
-      #         line-height: 1px;
-      #       }
-      #       .canvas * {
-      #         display: inline-block;
-      #         width: 10px;
-      #         height: 10px;
-      #         border-radius: 5px;
-      #       }
-      #       .canvas i {
-      #         background-color: #eee;
-      #       }
-      #       .canvas b {
-      #         background-color: #333;
-      #       }
-      #     </style>
-      #   </head>
-      #   <body>
-      #     <div class="canvas">
-      #   PREDATA
-
-      # HTML_SUFFIX = <<-POSTDATA
-      #     </div>
-      #   </body>
-      #   </html>
-      #   POSTDATA
+      CONTENT =
+        "<!doctypehtml>
+        <html>
+        <head>
+          <title>Rendered Canvas</title>
+          <style type=\"text/css\">
+            .canvas {
+              font-size: 1px;
+              line-height: 1px;
+            }
+            .canvas * {
+              display: inline-block;
+              width: 10px;
+              height: 10px;
+              border-radius: 5px;
+            }
+            .canvas i {
+              background-color: #eee;
+            }
+            .canvas b {
+              background-color: #333;
+            }
+          </style>
+        </head>
+        <body>
+          <divclass=\"canvas\">
+            %s
+          </div>
+        </body>
+        </html>"
     end
   end
 end
